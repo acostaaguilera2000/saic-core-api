@@ -1,0 +1,35 @@
+{
+  "name": "saic-core-api",
+  "version": "1.0.0",
+  "description": "Núcleo de servicios web y API REST para el sistema SAIC",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acostaaguilera2000/saic-core-api.git"
+  },
+  "keywords": [
+    "api",
+    "rest",
+    "backend",
+    "saic"
+  ],
+  "author": "Manuel Andrés Acosta Aguilera",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "mysql2": "^3.18.2"
+  },
+  "allowScripts": {
+    "bcrypt@6.0.0": true
+  }
+}
