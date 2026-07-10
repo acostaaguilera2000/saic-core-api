@@ -36,7 +36,7 @@ class DashboardController {
     static async getUserPortal(req, res) {
         try {
             // Se extrae el ID de usuario desde la sesión autenticada
-            const userId = req.session?.user?.id_usuario;
+            const userId = req.user.id_usuario;
             
             if (!userId) {
                 return res.status(401).json({

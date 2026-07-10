@@ -72,7 +72,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 
 // Rutas Privadas con Control de Acceso Basado en Roles (RBAC) Exacto
-app.use("/api/dashboard", isAuthenticated, dashboardRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/profile", isAuthenticated, profileRoutes);
 app.use("/api/users", isAuthenticated, isRole('admin'), userRoutes);
 app.use("/api/members", isAuthenticated, isRole('admin', 'tesorero', 'lider'), memberRoutes);

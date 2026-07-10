@@ -17,34 +17,39 @@ class ServicePlatformService {
     }
 
     /**
-     * Registra múltiples cultos en bloque en una sola transacción/query masiva
-     */
-    static async registerService(bodyData) {
-        const { cultos } = bodyData;
+ * Registra uno o múltiples cultos en la base de datos
+ */
+static async registerService(bodyData) {
+    // Normalizar entrada: Si envían un objeto directo, lo envolvemos en un array dentro de 'cultos'
+    let cultos = bodyData.cultos;
 
-        if (!cultos || !Array.isArray(cultos) || cultos.length === 0) {
-            const error = new Error("No se recibieron servicios válidos para programar.");
-            error.name = "BusinessValidationError";
-            throw error;
-        }
-
-        const recordsToInsert = cultos.map(item => {
-            const id_dirigente = item.id_dirigente || null;
-            const id_predicador = item.id_predicador || null;
-
-            return [
-                item.fecha,
-                item.hora,
-                item.tipo_culto ? item.tipo_culto.trim() : "",
-                id_dirigente,
-                id_dirigente ? null : (item.dirigente_externo ? item.dirigente_externo.trim() : null),
-                id_predicador,
-                id_predicador ? null : (item.predicador_externo ? item.predicador_externo.trim() : null)
-            ];
-        });
-
-        await Culto.createMassive(recordsToInsert);
+    if (!cultos && bodyData.tipo_culto) {
+        cultos = [bodyData]; // Si enviaron solo un objeto { tipo_culto, fecha, ... }
     }
+
+    if (!cultos || !Array.isArray(cultos) || cultos.length === 0) {
+        const error = new Error("No se recibieron servicios válidos para programar.");
+        error.name = "BusinessValidationError";
+        throw error;
+    }
+
+    const recordsToInsert = cultos.map(item => {
+        const id_dirigente = item.id_dirigente ? Number(item.id_dirigente) : null;
+        const id_predicador = item.id_predicador ? Number(item.id_predicador) : null;
+
+        return [
+            item.fecha,
+            item.hora,
+            item.tipo_culto ? item.tipo_culto.trim() : "",
+            id_dirigente,
+            id_dirigente ? null : (item.dirigente_externo ? item.dirigente_externo.trim() : null),
+            id_predicador,
+            id_predicador ? null : (item.predicador_externo ? item.predicador_externo.trim() : null)
+        ];
+    });
+
+    await Culto.createMassive(recordsToInsert);
+}
 
     /**
       * Modifica los datos de un culto existente (Edición individual - REST compatible)
