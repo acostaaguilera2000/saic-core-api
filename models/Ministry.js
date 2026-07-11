@@ -6,7 +6,17 @@ class Ministry {
      * @returns {Promise<Array>} Lista de ministerios ordenados alfabéticamente
      */
     static async getAll() {
-        const query = `SELECT id_ministerio, nombre, descripcion FROM ministerio ORDER BY nombre ASC`;
+        const query = `
+        SELECT 
+            m.id_ministerio, 
+            m.nombre, 
+            m.descripcion,
+            COUNT(mm.id_miembro) AS total_miembros
+        FROM ministerio m
+        LEFT JOIN miembro_ministerio mm ON m.id_ministerio = mm.id_ministerio
+        GROUP BY m.id_ministerio, m.nombre, m.descripcion
+        ORDER BY m.nombre ASC
+    `;
         const [rows] = await db.query(query);
         return rows;
     }
