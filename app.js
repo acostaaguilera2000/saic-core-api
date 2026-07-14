@@ -34,21 +34,41 @@ const app = express();
 // ==========================================
 // 3. MIDDLEWARES GLOBALES DE CONFIGURACIÓN
 // ==========================================
-app.use(cors());
+
+// Lista de orígenes autorizados
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+    'https://saic-frontend.vercel.app',
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Permitir peticiones sin origen (Postman, mobile, etc.)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app') || origin.endsWith('.ngrok-free.app')) {
+            return callback(null, true);
+        } else {
+            return callback(null, true);
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    // 🔴 AQUÍ AGREGAMOS 'ngrok-skip-browser-warning' A LOS HEADERS PERMITIDOS
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'ngrok-skip-browser-warning']
+}));
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Helmet configurado para API REST sin bloquear cross-origin
 app.use(
     helmet({
-        contentSecurityPolicy: {
-            useDefaults: true,
-            directives: {
-                "default-src": ["'self'"],
-                "connect-src": ["'self'"],
-                "upgrade-insecure-requests": [],
-            },
-        },
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+        contentSecurityPolicy: false // Desactivado para evitar interferir con peticiones de dominios externos como Vercel
     })
 );
 

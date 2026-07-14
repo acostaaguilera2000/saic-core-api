@@ -3,9 +3,9 @@ import db from "../config/db.js";
 class ServicePlatform {
 
     /**
-     * Recupera el listado de cultos con sus respectivos dirigentes y predicadores.
+     * Recupera el listado de cultos con sus respectivos dirigentes, predicadores y datos de logística.
      * @param {boolean} [upcomingOnly=false] - Si es true, solo retorna cultos desde la fecha actual en adelante.
-     * @returns {Promise<Array>} Lista de cultos (filtrada o historial completo).
+     * @returns {Promise<Array>} Lista de cultos con logística integrada.
      */
     static async listAll(upcomingOnly = false) {
         try {
@@ -22,10 +22,27 @@ class ServicePlatform {
                 m_dir.nombre AS nombre_dirigente,
                 m_dir.apellido AS apellido_dirigente,
                 m_pred.nombre AS nombre_predicador,
-                m_pred.apellido AS apellido_predicador
+                m_pred.apellido AS apellido_predicador,
+                -- 🔹 Campos de logística desde logistica_culto
+                lc.id_logistica,
+                lc.id_sonido,
+                lc.id_multimedia,
+                lc.id_aseo,
+                lc.observaciones,
+                m_son.nombre AS son_nom,
+                m_son.apellido AS son_ape,
+                m_mul.nombre AS mul_nom,
+                m_mul.apellido AS mul_ape,
+                m_ase.nombre AS ase_nom,
+                m_ase.apellido AS ase_ape
             FROM culto c
             LEFT JOIN miembro m_dir ON c.id_dirigente = m_dir.id_miembro
             LEFT JOIN miembro m_pred ON c.id_predicador = m_pred.id_miembro
+            -- 🔹 JOIN corregido hacia la tabla 'logistica_culto'
+            LEFT JOIN logistica_culto lc ON c.id_culto = lc.id_culto
+            LEFT JOIN miembro m_son ON lc.id_sonido = m_son.id_miembro
+            LEFT JOIN miembro m_mul ON lc.id_multimedia = m_mul.id_miembro
+            LEFT JOIN miembro m_ase ON lc.id_aseo = m_ase.id_miembro
         `;
 
             const queryParams = [];
@@ -40,10 +57,12 @@ class ServicePlatform {
             return rows || [];
         } catch (error) {
             console.error("Error en ServicePlatform.listAll:", error);
-            throw { status: 500, message: "Error al listar la agenda de cultos desde el repositorio." };
+            throw {
+                status: 500,
+                message: "Error al listar la agenda de cultos desde el repositorio."
+            };
         }
     }
-
     static async getById(id) {
         try {
             const query = `
@@ -58,7 +77,10 @@ class ServicePlatform {
             return rows.length > 0 ? rows[0] : null;
         } catch (error) {
             console.error("Error en ServicePlatform.getById:", error);
-            throw { status: 500, message: "Error al buscar el culto solicitado." };
+            throw {
+                status: 500,
+                message: "Error al buscar el culto solicitado."
+            };
         }
     }
 
@@ -75,7 +97,10 @@ class ServicePlatform {
             return result;
         } catch (error) {
             console.error("Error en ServicePlatform.createMassive:", error);
-            throw { status: 500, message: "Falla crítica al insertar la programación masiva de cultos." };
+            throw {
+                status: 500,
+                message: "Falla crítica al insertar la programación masiva de cultos."
+            };
         }
     }
 
@@ -112,7 +137,10 @@ class ServicePlatform {
             return result;
         } catch (error) {
             console.error("Error en ServicePlatform.update:", error);
-            throw { status: 500, message: "Error de persistencia al intentar modificar el culto." };
+            throw {
+                status: 500,
+                message: "Error de persistencia al intentar modificar el culto."
+            };
         }
     }
 
@@ -122,7 +150,10 @@ class ServicePlatform {
             return result;
         } catch (error) {
             console.error("Error en ServicePlatform.delete:", error);
-            throw { status: 500, message: "No se pudo eliminar el culto de la agenda por conflictos de dependencias." };
+            throw {
+                status: 500,
+                message: "No se pudo eliminar el culto de la agenda por conflictos de dependencias."
+            };
         }
     }
 
@@ -151,7 +182,10 @@ class ServicePlatform {
             return rows;
         } catch (error) {
             console.error("Error en ServicePlatform.findActiveTurnsByMemberId:", error);
-            throw { status: 500, message: "Error al consultar los turnos asignados del miembro." };
+            throw {
+                status: 500,
+                message: "Error al consultar los turnos asignados del miembro."
+            };
         }
     }
 }
