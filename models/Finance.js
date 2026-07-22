@@ -29,7 +29,10 @@ class Finance {
             return rows;
         } catch (error) {
             console.error("Error en Finance.getRecentDonations:", error);
-            throw { status: 500, message: "Error al listar el historial de donaciones recientes." };
+            throw {
+                status: 500,
+                message: "Error al listar el historial de donaciones recientes."
+            };
         }
     }
 
@@ -41,7 +44,11 @@ class Finance {
      * @returns {Promise<number>} El id_externo generado por la base de datos
      * @throws {Object} Estructura de error estandarizada con código de estado y mensaje descriptivo
      */
-    static async createExternalDonor({ nombre_completo, telefono, correo }) {
+    static async createExternalDonor({
+        nombre_completo,
+        telefono,
+        correo
+    }) {
         try {
             const query = `
                 INSERT INTO donantes_externos (nombre_completo, telefono, correo) 
@@ -51,7 +58,10 @@ class Finance {
             return result.insertId;
         } catch (error) {
             console.error("Error en Finance.createExternalDonor:", error);
-            throw { status: 500, message: "Error al registrar la información del donante externo." };
+            throw {
+                status: 500,
+                message: "Error al registrar la información del donante externo."
+            };
         }
     }
 
@@ -63,7 +73,15 @@ class Finance {
      * @returns {Promise<boolean>} Retorna verdadero si la operación concluyó con éxito
      * @throws {Object} Estructura de error estandarizada con código de estado y mensaje descriptivo
      */
-    static async insertDonation({ monto, fecha_registro, tipo_pago, categoria_ingreso, observacion, id_miembro, id_externo }) {
+    static async insertDonation({
+        monto,
+        fecha_registro,
+        tipo_pago,
+        categoria_ingreso,
+        observacion,
+        id_miembro,
+        id_externo
+    }) {
         try {
             const query = `
                 INSERT INTO donaciones 
@@ -74,7 +92,10 @@ class Finance {
             return true;
         } catch (error) {
             console.error("Error en Finance.insertDonation:", error);
-            throw { status: 500, message: "Error al asentar el registro de la donación en la base de datos." };
+            throw {
+                status: 500,
+                message: "Error al asentar el registro de la donación en la base de datos."
+            };
         }
     }
 
@@ -98,7 +119,10 @@ class Finance {
             return result.affectedRows > 0;
         } catch (error) {
             console.error("Error en Finance.updateStatus:", error);
-            throw { status: 500, message: "Error al actualizar el estado de la transacción contable." };
+            throw {
+                status: 500,
+                message: "Error al actualizar el estado de la transacción contable."
+            };
         }
     }
 
@@ -124,7 +148,53 @@ class Finance {
             return rows;
         } catch (error) {
             console.error("Error en Finance.getMonthlyDonationsSumByYear:", error);
-            throw { status: 500, message: "Error al compilar el histórico financiero anual." };
+            throw {
+                status: 500,
+                message: "Error al compilar el histórico financiero anual."
+            };
+        }
+    }
+
+    /**
+     * Busca un donante externo existente por su nombre o crea uno nuevo si es su primera donación.
+     * Permite que un mismo donante realice N cantidad de aportes contables.
+     * @static
+     * @async
+     * @param {string} nombreCompleto - Nombre del donante externo
+     * @returns {Promise<number>} El id_externo reutilizado o recién creado
+     */
+    static async findOrCreateExternalDonor(nombreCompleto) {
+        try {
+            const nombreLimpio = nombreCompleto.trim();
+
+            // 1. Verificar si el donante ya tiene un historial previo
+            const queryBusqueda = `
+            SELECT id_externo 
+            FROM donantes_externos 
+            WHERE LOWER(nombre_completo) = LOWER(?) 
+            LIMIT 1
+        `;
+            const [existentes] = await db.query(queryBusqueda, [nombreLimpio]);
+
+            // Si ya existe, retornamos su ID para vincular la nueva donación
+            if (existentes.length > 0) {
+                return existentes[0].id_externo;
+            }
+
+            // 2. Si es su primera donación, lo registramos en el catálogo de donantes
+            const queryInsercion = `
+            INSERT INTO donantes_externos (nombre_completo) 
+            VALUES (?)
+        `;
+            const [resultado] = await db.query(queryInsercion, [nombreLimpio]);
+            return resultado.insertId;
+
+        } catch (error) {
+            console.error("Error en Finance.findOrCreateExternalDonor:", error);
+            throw {
+                status: 500,
+                message: "Error al procesar la información del donante externo."
+            };
         }
     }
 }

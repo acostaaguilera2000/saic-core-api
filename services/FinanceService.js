@@ -19,27 +19,47 @@ class FinanceService {
             };
         } catch (error) {
             console.error("Error en FinanceService.getDashboardContext:", error);
-            throw error.status ? error : { status: 500, message: "Error al compilar el contexto financiero." };
+            throw error.status ? error : {
+                status: 500,
+                message: "Error al compilar el contexto financiero."
+            };
         }
     }
 
     static async processTransaction(payload) {
         try {
             // Desestructuramos tipo_pago del payload entrante
-            const { procedencia, monto, fecha, categoria_ingreso, tipo_pago, observacion } = payload;
+            const {
+                procedencia,
+                monto,
+                fecha,
+                categoria_ingreso,
+                tipo_pago,
+                observacion
+            } = payload;
             let assignedMemberId = null;
             let assignedExternalId = null;
-
             if (procedencia === 'interno') {
                 assignedMemberId = parseInt(payload.id_miembro, 10);
                 const memberExists = await Member.findById(assignedMemberId);
                 if (!memberExists) {
-                    throw { status: 404, message: "El miembro seleccionado no figura registrado en el censo actual." };
+                    throw {
+                        status: 404,
+                        message: "El miembro seleccionado no figura registrado en el censo actual."
+                    };
                 }
             } else {
-                assignedExternalId = await Finance.findOrCreateExternalDonor(payload.nombre_externo.trim());
-            }
+                // Validar que enviaron el nombre del donante
+                if (!payload.nombre_externo || !payload.nombre_externo.trim()) {
+                    throw {
+                        status: 400,
+                        message: "Debe indicar el nombre del donante externo."
+                    };
+                }
 
+                // Busca el donante existente para asociar el nuevo aporte, o crea su ficha si es nuevo
+                assignedExternalId = await Finance.findOrCreateExternalDonor(payload.nombre_externo);
+            }
             // Enviamos el bloque completo respetando los nombres esperados por la query SQL de Finance.js
             await Finance.insertDonation({
                 monto: monto,
@@ -52,7 +72,10 @@ class FinanceService {
             });
         } catch (error) {
             console.error("Error en FinanceService.processTransaction:", error);
-            throw error.status ? error : { status: 500, message: "Error al asentar el registro de la donación en la base de datos." };
+            throw error.status ? error : {
+                status: 500,
+                message: "Error al asentar el registro de la donación en la base de datos."
+            };
         }
     }
 
@@ -60,12 +83,18 @@ class FinanceService {
         try {
             const idParsed = parseInt(idDonacion, 10);
             if (isNaN(idParsed)) {
-                throw { status: 400, message: "El identificador de la transacción provisto no es válido." };
+                throw {
+                    status: 400,
+                    message: "El identificador de la transacción provisto no es válido."
+                };
             }
             return await Finance.updateStatus(idParsed, 'Anulada');
         } catch (error) {
             console.error("Error en FinanceService.cancelTransaction:", error);
-            throw error.status ? error : { status: 500, message: "Error al gestionar la anulación del asiento." };
+            throw error.status ? error : {
+                status: 500,
+                message: "Error al gestionar la anulación del asiento."
+            };
         }
     }
 }

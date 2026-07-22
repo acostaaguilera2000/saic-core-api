@@ -15,6 +15,6 @@ router.get('/admin', isAuthenticated, isRole('admin', 'lider'), DashboardControl
 
 // Endpoint para el portal personal del miembro común (Sus datos, responsabilidades en cultos)
 // Consumo: GET /api/dashboard/user-portal
-router.get('/user-portal', isAuthenticated, DashboardController.getUserPortal);
+router.get('/user-portal', isAuthenticated,isRole('miembro'), DashboardController.getUserPortal);
 
 export default router;
